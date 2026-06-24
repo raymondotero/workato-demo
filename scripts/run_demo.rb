@@ -1,15 +1,17 @@
 #\!/usr/bin/env ruby
 # frozen_string_literal: true
 #
-# LCI demo runner. Fires the four mandatory payloads at the Workato webhooks
-# in the required execution order and prints the response plus a manual
-# verification checklist. Written in Ruby to match Workato's SDK / formula style.
+# LCI demo runner. Fires the mandatory payloads at the Workato webhooks in the
+# required execution order and prints a manual verification checklist.
+# Written in Ruby to match Workato's SDK / formula style.
 #
 # Usage:
-#   1. cp .env.example .env  and set RECIPE_1_WEBHOOK_URL and RECIPE_2_WEBHOOK_URL
-#   2. ruby scripts/run_demo.rb            # runs the whole sequence
-#   ruby scripts/run_demo.rb amelia        # just Amelia (intake + verification)
-#   ruby scripts/run_demo.rb daniel        # just Daniel (intake + escalation)
+#   cp .env.example .env  and set the webhook URLs
+#   ruby scripts/run_demo.rb            # full sell-side sequence
+#   ruby scripts/run_demo.rb amelia     # just Amelia (intake + verification)
+#   ruby scripts/run_demo.rb daniel     # just Daniel (intake + escalation)
+#   ruby scripts/run_demo.rb buyer      # optional buy-side Shopify extension
+#   ruby scripts/run_demo.rb all        # sell-side, then buy-side if configured
 
 require "net/http"
 require "json"
@@ -53,6 +55,7 @@ end
 target = (ARGV[0] || "all").downcase
 r1 = ENV["RECIPE_1_WEBHOOK_URL"]
 r2 = ENV["RECIPE_2_WEBHOOK_URL"]
+r4 = ENV["RECIPE_4_WEBHOOK_URL"]
 
 if %w[all amelia].include?(target)
   step "1) Amelia intake  (standard path setup)"
@@ -99,6 +102,31 @@ if %w[all daniel].include?(target)
     "Jira senior approval comment added",
     "Slack confirmation in #lci-customer-support"
   )
+end
+
+# Optional buy-side extension (Shopify). Only runs when RECIPE_4_WEBHOOK_URL is set.
+if %w[all buyer].include?(target)
+  if r4.nil? || r4.empty?
+    puts ""
+    puts "(Buy-side extension skipped: set RECIPE_4_WEBHOOK_URL in .env to run it.)" if target == "all"
+    if target == "buyer"
+      warn "RECIPE_4_WEBHOOK_URL is not set. Add it to .env to run the buy-side extension."
+      exit 1
+    end
+  else
+    sleep 2
+    step "5) Buyer order  (Shopify -> unified buyer profile)"
+    post(r4, "amelia_buyer_order.json")
+    checklist(
+      "Salesforce Contact Amelia Hart reused (same person who consigned the Chanel)",
+      "Buyer Purchase LCI-ORD-AMELIA-0001 created and linked to the Amelia Contact",
+      "AI Personalization Summary and Next Best Offer populated (internal, governed)",
+      "Slack message in #lci-buyer-activity"
+    )
+    puts ""
+    puts "  Story beat: Amelia appears on BOTH the sell side and the buy side."
+    puts "  That single customer view is exactly the omni-channel mandate LCI's CEO asked for."
+  end
 end
 
 puts ""

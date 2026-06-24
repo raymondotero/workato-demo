@@ -1,6 +1,6 @@
 #\!/usr/bin/env bash
-# Zero-dependency fallback. Same four payloads as run_demo.rb, in order.
-# Usage: set the two URLs, then: bash scripts/run-demo.sh
+# Zero-dependency fallback. Sell-side sequence, plus optional buy-side step.
+# Usage: set the URLs, then: bash scripts/run-demo.sh
 set -euo pipefail
 
 : "${RECIPE_1_WEBHOOK_URL:?set RECIPE_1_WEBHOOK_URL}"
@@ -14,3 +14,9 @@ post "Amelia verification"  "$RECIPE_2_WEBHOOK_URL" amelia_verification.json;  s
 post "Daniel intake"        "$RECIPE_1_WEBHOOK_URL" daniel_intake.json;        sleep 2
 post "Daniel verification"  "$RECIPE_2_WEBHOOK_URL" daniel_verification.json
 echo; echo "Now click 'Approve Senior Review' in #lci-senior-auth."
+
+if [ -n "${RECIPE_4_WEBHOOK_URL:-}" ]; then
+  sleep 2
+  post "Buyer order (Shopify)" "$RECIPE_4_WEBHOOK_URL" amelia_buyer_order.json
+  echo "Check #lci-buyer-activity and the Buyer Purchase linked to Amelia's Contact."
+fi

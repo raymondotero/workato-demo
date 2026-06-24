@@ -1,0 +1,26 @@
+{
+  "event_type": "buyer.order.placed",
+  "event_id": "evt-amelia-order-001",
+  "order_id": "LCI-ORD-AMELIA-0001",
+  "buyer": {
+    "first_name": "Amelia",
+    "last_name": "Hart",
+    "email": "amelia.hart@example.com",
+    "phone": "+1-212-555-0148"
+  },
+  "order": {
+    "channel": "Shopify",
+    "region": "North America",
+    "order_total": 4950,
+    "currency": "USD",
+    "items": [
+      {
+        "brand": "Cartier",
+        "model": "Tank Must",
+        "category": "Watch",
+        "price": 4950
+      }
+    ],
+    "placed_at": "2026-06-20T16:30:00-04:00"
+  }
+}
