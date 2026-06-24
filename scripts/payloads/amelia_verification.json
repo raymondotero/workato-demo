@@ -1,0 +1,19 @@
+{
+  "event_type": "verification.completed",
+  "event_id": "evt-amelia-verification-001",
+  "consignment_id": "LCI-AMELIA-CHANEL-001",
+  "authentication_result": "Pass",
+  "condition_grade": "A",
+  "verifier_confidence": 0.94,
+  "buy_price": 4300,
+  "selling_price_min": 5800,
+  "selling_price_max": 6400,
+  "evidence": [
+    "Serial number format matches expected Chanel range.",
+    "Stitching count and quilting alignment are consistent.",
+    "Hardware engraving matches reference library.",
+    "Accessories include dust bag and authenticity card."
+  ],
+  "verified_by": "Maya Chen",
+  "verified_at": "2026-06-19T14:10:00-04:00"
+}

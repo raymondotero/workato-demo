@@ -1,0 +1,19 @@
+{
+  "event_type": "verification.completed",
+  "event_id": "evt-daniel-verification-001",
+  "consignment_id": "LCI-DANIEL-BIRKIN-001",
+  "authentication_result": "Needs Review",
+  "condition_grade": "B",
+  "verifier_confidence": 0.62,
+  "buy_price": 12000,
+  "selling_price_min": 16500,
+  "selling_price_max": 18500,
+  "evidence": [
+    "Stamp appears consistent but requires senior review.",
+    "Hardware engraving is partially worn.",
+    "Handle wear is heavier than stated by seller.",
+    "High-value item exceeds auto-clearance threshold."
+  ],
+  "verified_by": "Maya Chen",
+  "verified_at": "2026-06-19T14:12:00-04:00"
+}

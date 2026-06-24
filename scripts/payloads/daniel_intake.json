@@ -1,0 +1,24 @@
+{
+  "event_type": "consignment.intake.submitted",
+  "event_id": "evt-daniel-intake-001",
+  "consignment_id": "LCI-DANIEL-BIRKIN-001",
+  "seller": {
+    "first_name": "Daniel",
+    "last_name": "Moreau",
+    "email": "daniel.moreau@example.com",
+    "phone": "+33-1-55-55-0101"
+  },
+  "item": {
+    "brand": "Hermes",
+    "model": "Birkin 30",
+    "category": "Handbag",
+    "estimated_value": 18000,
+    "materials": "Togo leather, palladium hardware",
+    "accessories": "Dust bag, lock, clochette"
+  },
+  "intake": {
+    "channel": "Web",
+    "region": "EMEA",
+    "submitted_at": "2026-06-19T14:05:00-04:00"
+  }
+}

@@ -1,0 +1,4 @@
+.env
+.sf/
+.sfdx/
+*.log

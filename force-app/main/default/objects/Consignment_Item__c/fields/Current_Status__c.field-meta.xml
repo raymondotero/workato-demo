@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Current_Status__c</fullName>
+    <label>Current Status</label>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Intake Received</fullName>
+                <default>false</default>
+                <label>Intake Received</label>
+            </value>
+            <value>
+                <fullName>Verification Assigned</fullName>
+                <default>false</default>
+                <label>Verification Assigned</label>
+            </value>
+            <value>
+                <fullName>Verification Complete</fullName>
+                <default>false</default>
+                <label>Verification Complete</label>
+            </value>
+            <value>
+                <fullName>Cleaning Queue</fullName>
+                <default>false</default>
+                <label>Cleaning Queue</label>
+            </value>
+            <value>
+                <fullName>Escalation Pending</fullName>
+                <default>false</default>
+                <label>Escalation Pending</label>
+            </value>
+            <value>
+                <fullName>Senior Review Approved</fullName>
+                <default>false</default>
+                <label>Senior Review Approved</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <label>Rejected</label>
+            </value>
+            <value>
+                <fullName>Automation Exception</fullName>
+                <default>false</default>
+                <label>Automation Exception</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <required>false</required>
+</CustomField>
