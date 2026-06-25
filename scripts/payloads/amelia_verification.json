@@ -4,7 +4,7 @@
   "consignment_id": "LCI-AMELIA-CHANEL-001",
   "authentication_result": "Pass",
   "condition_grade": "A",
-  "verifier_confidence": 0.94,
+  "verifier_confidence": 94,
   "buy_price": 4300,
   "selling_price_min": 5800,
   "selling_price_max": 6400,
