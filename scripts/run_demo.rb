@@ -1,25 +1,38 @@
-#\!/usr/bin/env ruby
+#!/usr/bin/env ruby
 # frozen_string_literal: true
 #
-# LCI demo runner. Fires the mandatory payloads at the Workato webhooks in the
-# required execution order and prints a manual verification checklist.
-# Written in Ruby to match Workato's SDK / formula style.
+# LCI demo runner (final architecture, June 26 2026).
+#
+# Matches the Demo Day Run Sheet exactly:
+#   - Verification is EVENT-DRIVEN off the Salesforce record (no verification cURL).
+#     You fire ONE intake per item and routing happens automatically.
+#   - Senior approval runs through the LCI Senior Decision webhook (lci_decision),
+#     NOT Slack buttons.
+#   - Optional Phase 2 bonus: cleaning -> Ready for Listing (lci_cleaning_complete).
+#
+# Each runbook command is its own selectable target so you can fire them
+# one at a time, live, in order.
 #
 # Usage:
-#   cp .env.example .env  and set the webhook URLs
-#   ruby scripts/run_demo.rb            # full sell-side sequence
-#   ruby scripts/run_demo.rb amelia     # just Amelia (intake + verification)
-#   ruby scripts/run_demo.rb daniel     # just Daniel (intake + escalation)
-#   ruby scripts/run_demo.rb buyer      # optional buy-side Shopify extension
-#   ruby scripts/run_demo.rb all        # sell-side, then buy-side if configured
+#   cp .env.example .env   and set INTAKE_WEBHOOK_URL and DECISION_WEBHOOK_URL
+#   ruby scripts/run_demo.rb amelia        # 1)  Amelia intake (clean auto-verify)
+#   ruby scripts/run_demo.rb cleaning      # 1b) Amelia cleaning -> Ready for Listing (optional bonus)
+#   ruby scripts/run_demo.rb daniel        # 2)  Daniel intake (governed escalation)
+#   ruby scripts/run_demo.rb approve       # 3)  Submit senior decision: approve LCI-2001
+#   ruby scripts/run_demo.rb reject-intake # 4a) Fresh Daniel intake LCI-2002 (reject setup)
+#   ruby scripts/run_demo.rb reject        # 4b) Submit senior decision: reject LCI-2002
+#   ruby scripts/run_demo.rb all           # full sell-side sequence in order
+#
+# "all" runs: amelia -> cleaning(if built) -> daniel -> approve.
+# The reject path is intentionally manual so you control it live.
 
 require "net/http"
 require "json"
 require "uri"
 require_relative "env"
 
-Env.load\!
-Env.require\!("RECIPE_1_WEBHOOK_URL", "RECIPE_2_WEBHOOK_URL")
+Env.load!
+Env.require!("INTAKE_WEBHOOK_URL", "DECISION_WEBHOOK_URL")
 
 PAYLOADS = File.join(__dir__, "payloads")
 
@@ -52,82 +65,105 @@ def checklist(*items)
   items.each { |i| puts "    [ ] #{i}" }
 end
 
-target = (ARGV[0] || "all").downcase
-r1 = ENV["RECIPE_1_WEBHOOK_URL"]
-r2 = ENV["RECIPE_2_WEBHOOK_URL"]
-r4 = ENV["RECIPE_4_WEBHOOK_URL"]
+target  = (ARGV[0] || "all").downcase
+intake  = ENV["INTAKE_WEBHOOK_URL"]
+decide  = ENV["DECISION_WEBHOOK_URL"]
+clean   = ENV["CLEANING_WEBHOOK_URL"]
 
-if %w[all amelia].include?(target)
-  step "1) Amelia intake  (standard path setup)"
-  post(r1, "amelia_intake.json")
+def amelia(intake)
+  step "1) Amelia intake  (clean auto-verify path, LCI-1001)"
+  post(intake, "amelia_intake.json")
   checklist(
-    "Salesforce Contact Amelia Hart created",
-    "Consignment Item LCI-AMELIA-CHANEL-001, Status = Verification Assigned, Jira Issue Key set",
-    "Jira task created for the Chanel Classic Flap",
-    "Slack message in #lci-verification"
-  )
-  sleep 2
-  step "2) Amelia verification  (Pass, 0.94, $6,200 -> CLEANING QUEUE)"
-  post(r2, "amelia_verification.json")
-  checklist(
-    "Salesforce Status = Cleaning Queue, Authentication Result = Pass, Condition Grade = A",
-    "AI Status Summary populated, Approval Status = Not Required",
-    "Jira fields updated and verification comment added",
-    "Slack message in #lci-customer-support"
+    "Salesforce Consignment Item LCI-1001 created and auto-cleared (no escalation)",
+    "AI scored high confidence (> 79); routed straight through",
+    "Slack message in #lci-customer-support",
+    "No human touch, no Jira review ticket"
   )
 end
 
-if %w[all daniel].include?(target)
-  sleep 2
-  step "3) Daniel intake  (escalation path setup)"
-  post(r1, "daniel_intake.json")
+def cleaning(clean)
+  if clean.nil? || clean.empty?
+    puts ""
+    puts "(Cleaning step skipped: set CLEANING_WEBHOOK_URL in .env once the bonus recipe is built and started.)"
+    return
+  end
+  step "1b) Amelia cleaning complete -> Ready for Listing  (optional Phase 2 bonus, LCI-1001)"
+  post(clean, "amelia_cleaning_complete.json")
   checklist(
-    "Salesforce Contact Daniel Moreau created",
-    "Consignment Item LCI-DANIEL-BIRKIN-001, Status = Verification Assigned, Jira Issue Key set",
-    "Jira task created for the Hermes Birkin 30",
-    "Slack message in #lci-verification"
-  )
-  sleep 2
-  step "4) Daniel verification  (Needs Review, 0.62, $18,000 -> ESCALATION)"
-  post(r2, "daniel_verification.json")
-  checklist(
-    "Salesforce Status = Escalation Pending, Approval Status = Pending, Escalation Reason populated",
-    "AI Status Summary populated",
-    "Slack approval message with two buttons in #lci-senior-auth"
+    "Salesforce LCI-1001 Current Status = Ready for Listing",
+    "Evidence Log shows the appended cleaning entry",
+    "Slack 'ready for listing' message in #lci-customer-support"
   )
   puts ""
-  puts "  NEXT: click 'Approve Senior Review' in #lci-senior-auth, then verify:"
+  puts "  SAY THE HANDOFF LINE: 'This is where Shopify would connect in a later phase...'"
+end
+
+def daniel(intake)
+  step "2) Daniel intake  (governed escalation, LCI-2001)"
+  post(intake, "daniel_intake.json")
   checklist(
-    "Salesforce Status = Senior Review Approved, Approval Status = Approved, Approved By / Approved At set",
-    "Jira senior approval comment added",
-    "Slack confirmation in #lci-customer-support"
+    "AI scores ~65%; item HOLDS at Escalation Pending in Salesforce",
+    "Jira review ticket created",
+    "Clean governance post (NO buttons) in #lci-senior-auth with confidence, reason, Jira key"
+  )
+  puts ""
+  puts "  Wait 10-15 seconds for the escalation to post before submitting the decision."
+end
+
+def approve(decide)
+  step "3) Senior decision: APPROVE  (LCI-2001)"
+  post(decide, "decision_approve.json")
+  checklist(
+    "Salesforce LCI-2001 Status = Senior Review Approved",
+    "#lci-customer-support gets the 'approved after senior review' message",
+    "#lci-senior-auth gets 'Approved by Raymond Otero. Loop closed.'"
   )
 end
 
-# Optional buy-side extension (Shopify). Only runs when RECIPE_4_WEBHOOK_URL is set.
-if %w[all buyer].include?(target)
-  if r4.nil? || r4.empty?
-    puts ""
-    puts "(Buy-side extension skipped: set RECIPE_4_WEBHOOK_URL in .env to run it.)" if target == "all"
-    if target == "buyer"
-      warn "RECIPE_4_WEBHOOK_URL is not set. Add it to .env to run the buy-side extension."
-      exit 1
-    end
-  else
-    sleep 2
-    step "5) Buyer order  (Shopify -> unified buyer profile)"
-    post(r4, "amelia_buyer_order.json")
-    checklist(
-      "Salesforce Contact Amelia Hart reused (same person who consigned the Chanel)",
-      "Buyer Purchase LCI-ORD-AMELIA-0001 created and linked to the Amelia Contact",
-      "AI Personalization Summary and Next Best Offer populated (internal, governed)",
-      "Slack message in #lci-buyer-activity"
-    )
-    puts ""
-    puts "  Story beat: Amelia appears on BOTH the sell side and the buy side."
-    puts "  That single customer view is exactly the omni-channel mandate LCI's CEO asked for."
-  end
+def reject_intake(intake)
+  step "4a) Fresh Daniel intake  (reject-path setup, LCI-2002)"
+  post(intake, "daniel_intake_reject.json")
+  checklist(
+    "Salesforce Consignment Item LCI-2002 created, escalates to #lci-senior-auth"
+  )
+  puts ""
+  puts "  Wait for the escalation to post, then run: ruby scripts/run_demo.rb reject"
+end
+
+def reject(decide)
+  step "4b) Senior decision: REJECT  (LCI-2002)"
+  post(decide, "decision_reject.json")
+  checklist(
+    "Salesforce LCI-2002 Status = Rejected",
+    "Both channels post the rejection with a follow-up flag"
+  )
+end
+
+case target
+when "amelia"        then amelia(intake)
+when "cleaning"      then cleaning(clean)
+when "daniel"        then daniel(intake)
+when "approve"       then approve(decide)
+when "reject-intake" then reject_intake(intake)
+when "reject"        then reject(decide)
+when "all"
+  amelia(intake)
+  sleep 2
+  cleaning(clean)
+  sleep 2
+  daniel(intake)
+  puts ""
+  puts "  Pausing 15s so the escalation can post before the decision..."
+  sleep 15
+  approve(decide)
+  puts ""
+  puts "  (Reject path is manual: run 'reject-intake' then 'reject' if you want to show it.)"
+else
+  warn "Unknown target '#{target}'."
+  warn "Valid: amelia | cleaning | daniel | approve | reject-intake | reject | all"
+  exit 1
 end
 
 puts ""
-puts "Done. Any recipe failure should post to #lci-automation-alerts."
+puts "Done. The decision endpoint is deterministic, so you can safely re-fire the same"
+puts "command on the same ID if a live post lags. Any recipe failure posts to #lci-automation-alerts."

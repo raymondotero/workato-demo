@@ -1,24 +1,8 @@
 {
-  "event_type": "consignment.intake.submitted",
-  "event_id": "evt-amelia-intake-001",
-  "consignment_id": "LCI-AMELIA-CHANEL-001",
-  "seller": {
-    "first_name": "Amelia",
-    "last_name": "Hart",
-    "email": "amelia.hart@example.com",
-    "phone": "+1-212-555-0148"
-  },
-  "item": {
-    "brand": "Chanel",
-    "model": "Classic Flap",
-    "category": "Handbag",
-    "estimated_value": 6200,
-    "materials": "Black lambskin leather, gold hardware",
-    "accessories": "Dust bag, authenticity card"
-  },
-  "intake": {
-    "channel": "Web",
-    "region": "North America",
-    "submitted_at": "2026-06-19T14:00:00-04:00"
-  }
+  "consignment_id": "LCI-1001",
+  "seller_name": "Amelia Hart",
+  "seller_email": "amelia.hart@example.com",
+  "brand": "Chanel",
+  "model": "Classic Flap Medium",
+  "estimated_value": 8500
 }
