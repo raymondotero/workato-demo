@@ -1,0 +1,9 @@
+{
+  "event_type": "cleaning.completed",
+  "event_id": "evt-amelia-cleaning-001",
+  "consignment_id": "LCI-1001",
+  "cleaning_result": "Cleaning completed successfully. Minor leather conditioning performed.",
+  "listing_notes": "Photograph front, back, interior, hardware, authenticity card, and dust bag. Use premium handbag listing template.",
+  "completed_by": "Sofia Ramirez",
+  "completed_at": "2026-06-26T09:00:00-04:00"
+}
